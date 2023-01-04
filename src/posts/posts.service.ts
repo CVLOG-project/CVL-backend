@@ -1,23 +1,30 @@
+import { CategoryEntity } from './../entities/categories.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 import { PostRequestDto } from './posts.request.dto';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PostsRepository } from './post.repository';
-import { PostEntity } from './post.entity';
+import { PostsRepository } from './posts.repository';
+import { PostEntity } from '../entities/posts.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly postsRepository: PostsRepository) {}
+  constructor(
+    @InjectRepository(CategoryEntity)
+    private categoriesRepository: Repository<CategoryEntity>,
+    private readonly postsRepository: PostsRepository,
+  ) {}
 
-  getAllPost() {
+  async getAllPost() {
     const user_id = 1; //after complete jwt, insert decoding user_id
 
     return this.postsRepository.getAllPost(user_id);
   }
 
-  getOnePost(id: number): Promise<PostEntity> {
+  async getOnePost(id: number): Promise<PostEntity> {
     const found = this.postsRepository.getOnePost(id);
 
     if (!found) {
@@ -30,12 +37,22 @@ export class PostsService {
   async createPost(body: PostRequestDto) {
     const { title, content, user_id, category_id, public_status } = body;
 
+    const category = await this.categoriesRepository.findOne({
+      where: { id: category_id },
+    });
+
+    if (!category) {
+      throw new NotFoundException(
+        `Can't find category with category_id: ${category_id}`,
+      );
+    }
+
     return await this.postsRepository.createPost(
       title,
       content,
       user_id,
-      category_id,
       public_status,
+      category,
     );
   }
 

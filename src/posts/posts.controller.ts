@@ -6,12 +6,10 @@ import {
   Patch,
   Post,
   Put,
-  HttpException,
   UseInterceptors,
   Body,
   Param,
   ParseIntPipe,
-  BadRequestException,
 } from '@nestjs/common';
 import { SuccessInterceptor } from './../common/interceptors/success.interceptor';
 import { PostsService } from './posts.service';

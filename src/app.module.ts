@@ -6,6 +6,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeORMConfig } from './configs/typeorm.config';
 import { PostsModule } from './posts/posts.module';
 import { LoggerMiddleware } from './common/middlewares/logger/logger.middleware';
+import { TagsModule } from './tags/tags.module';
+import { CategoriesModule } from './categories/categories.module';
+import { TagFoldersModule } from './tag_folders/tag_folders.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { LoggerMiddleware } from './common/middlewares/logger/logger.middleware'
     }),
     TypeOrmModule.forRoot(typeORMConfig),
     PostsModule,
+    TagsModule,
+    CategoriesModule,
+    TagFoldersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
