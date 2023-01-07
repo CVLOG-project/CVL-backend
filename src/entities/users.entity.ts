@@ -9,6 +9,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
+import { PostEntity } from './posts.entity';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
@@ -18,10 +20,11 @@ export class UserEntity extends BaseEntity {
   @Column({ unique: true })
   github_id: string;
 
-  @Column('varchar', { length: 50 })
+  @Column('varchar', { length: 50, nullable: true })
   name: string;
 
-  @Column('varchar', { length: 60, nullable: true })
+  @Column('varchar', { length: 255, nullable: true })
+  @Exclude()
   refresh_token: string | null;
 
   @Column('varchar', { length: 255, nullable: true })
@@ -47,4 +50,13 @@ export class UserEntity extends BaseEntity {
     },
   )
   tag_folders: TagFolderEntity[];
+
+  @OneToMany(
+    () => PostEntity,
+    (post: PostEntity) => post.user_id,
+    {
+      cascade: true,
+    },
+  )
+  posts: PostEntity[];
 }

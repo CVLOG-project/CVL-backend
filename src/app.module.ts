@@ -11,6 +11,8 @@ import { LoggerMiddleware } from './common/middlewares/logger/logger.middleware'
 import { TagsModule } from './tags/tags.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagFoldersModule } from './tag_folders/tag_folders.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { TagFoldersModule } from './tag_folders/tag_folders.module';
       ttl: 60,
       limit: 10,
     }),
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
