@@ -9,14 +9,23 @@ import { LoggerMiddleware } from './common/middlewares/logger/logger.middleware'
 import { TagsModule } from './tags/tags.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagFoldersModule } from './tag_folders/tag_folders.module';
+import { UsersModule } from './users/users.module';
+
+import { TagsModule } from './tags/tags.module';
+import { CategoriesModule } from './categories/categories.module';
+import { TagFoldersModule } from './tag_folders/tag_folders.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal: true
     }),
     TypeOrmModule.forRoot(typeORMConfig),
     PostsModule,
+    TagsModule,
+    CategoriesModule,
+    TagFoldersModule,
+    UsersModule,
     TagsModule,
     CategoriesModule,
     TagFoldersModule,
