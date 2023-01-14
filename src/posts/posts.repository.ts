@@ -1,4 +1,5 @@
-import { PostEntity } from './post.entity';
+import { CategoryEntity } from './../entities/categories.entity';
+import { PostEntity } from '../entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
@@ -11,14 +12,16 @@ export class PostsRepository {
   ) {}
 
   async getAllPost(user_id) {
-    return await this.postsRepository.find(user_id);
+    return await this.postsRepository.find({
+      where: { user_id },
+      relations: { tags: true },
+    });
   }
 
   async getOnePost(id: number) {
     return await this.postsRepository.findOne({
-      where: {
-        id,
-      },
+      where: { id },
+      relations: { tags: true },
     });
   }
 
@@ -26,16 +29,17 @@ export class PostsRepository {
     title: string,
     content: string,
     user_id: number,
-    category_id: number,
     public_status: boolean,
+    category: CategoryEntity,
   ) {
     const post = this.postsRepository.create({
       title,
       content,
       user_id,
-      category_id,
       public_status,
     });
+
+    post.category_id = category;
 
     await this.postsRepository.save(post);
 
