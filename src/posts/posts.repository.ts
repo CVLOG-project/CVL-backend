@@ -1,3 +1,4 @@
+import { TagEntity } from 'src/entities/tags.entity';
 import { CategoryEntity } from './../entities/categories.entity';
 import { PostEntity } from '../entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -31,6 +32,7 @@ export class PostsRepository {
     user_id: number,
     public_status: boolean,
     category: CategoryEntity,
+    concatTags: TagEntity[],
   ) {
     const post = this.postsRepository.create({
       title,
@@ -41,12 +43,41 @@ export class PostsRepository {
 
     post.category_id = category;
 
+    if (concatTags.length !== 0) {
+      if (!post.tags) {
+        post.tags = concatTags;
+      } else {
+        post.tags = post.tags.concat(concatTags);
+      }
+    }
+
     await this.postsRepository.save(post);
 
     return post;
   }
 
-  async updatePost(id: number, title: string, content: string) {
+  async updatePost(
+    id: number,
+    title: string,
+    content: string,
+    tags: TagEntity[],
+  ) {
+    // return await this.postsRepository.update(id, {
+    //   title,
+    //   content,
+    // });
+
+    const post = await this.postsRepository.findOne({
+      where: { id },
+      relations: {
+        tags: true,
+      },
+    });
+
+    post.tags = tags;
+
+    await this.postsRepository.save(post);
+
     return await this.postsRepository.update(id, {
       title,
       content,
@@ -59,7 +90,7 @@ export class PostsRepository {
     });
   }
 
-  deletePost(id: number) {
+  async deletePost(id: number) {
     return this.postsRepository.delete(id);
   }
 }
