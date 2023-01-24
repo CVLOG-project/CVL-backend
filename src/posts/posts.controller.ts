@@ -22,20 +22,20 @@ export class PostsController {
 
   @ApiOperation({ summary: '전체 post 조회' })
   @Get()
-  getAllPost() {
-    return this.postsService.getAllPost();
+  async getAllPost() {
+    return await this.postsService.getAllPost();
   }
 
   @ApiOperation({ summary: 'post 상세 조회' })
   @Get(':id')
-  getOnePost(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.getOnePost(id);
+  async getOnePost(@Param('id', ParseIntPipe) id: number) {
+    return await this.postsService.getOnePost(id);
   }
 
   @ApiOperation({ summary: 'post 등록' })
   @Post()
-  createPost(@Body() body: PostRequestDto) {
-    return this.postsService.createPost(body);
+  async createPost(@Body() body: PostRequestDto) {
+    return await this.postsService.createPost(body);
   }
 
   @ApiOperation({ summary: 'post 수정' })
@@ -58,7 +58,7 @@ export class PostsController {
 
   @ApiOperation({ summary: 'post 삭제' })
   @Delete(':id')
-  deletePost(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.deletePost(id);
+  async deletePost(@Param('id', ParseIntPipe) id: number) {
+    return await this.postsService.deletePost(id);
   }
 }

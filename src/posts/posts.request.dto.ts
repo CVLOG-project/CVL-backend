@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class PostRequestDto {
   @ApiProperty({
@@ -20,15 +20,6 @@ export class PostRequestDto {
 
   @ApiProperty({
     example: 1,
-    description: 'user_id',
-    required: true,
-  })
-  @IsNumber()
-  @IsNotEmpty()
-  user_id: number;
-
-  @ApiProperty({
-    example: 1,
     description: 'category_id',
     required: true,
   })
@@ -42,4 +33,7 @@ export class PostRequestDto {
     required: true,
   })
   public_status: boolean;
+
+  @IsArray()
+  tags: string[];
 }
