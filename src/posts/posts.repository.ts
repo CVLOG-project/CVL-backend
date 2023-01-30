@@ -4,12 +4,15 @@ import { PostEntity } from '../entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { FileEntity } from 'src/entities/files.entity';
 
 @Injectable()
 export class PostsRepository {
   constructor(
     @InjectRepository(PostEntity)
     private postsRepository: Repository<PostEntity>,
+    @InjectRepository(FileEntity)
+    private filesRepository: Repository<FileEntity>,
   ) {}
 
   async getAllPost(user_id) {
@@ -22,7 +25,7 @@ export class PostsRepository {
   async getOnePost(id: number) {
     return await this.postsRepository.findOne({
       where: { id },
-      relations: { tags: true },
+      relations: { tags: true, files: true },
     });
   }
 
@@ -33,6 +36,7 @@ export class PostsRepository {
     public_status: boolean,
     category: CategoryEntity,
     concatTags: TagEntity[],
+    concatFiles: FileEntity[],
   ) {
     const post = this.postsRepository.create({
       title,
@@ -51,6 +55,14 @@ export class PostsRepository {
       }
     }
 
+    if (concatFiles.length !== 0) {
+      if (!post.files) {
+        post.files = concatFiles;
+      } else {
+        post.files = post.files.concat(concatFiles);
+      }
+    }
+
     await this.postsRepository.save(post);
 
     return post;
@@ -61,20 +73,18 @@ export class PostsRepository {
     title: string,
     content: string,
     tags: TagEntity[],
+    files: FileEntity[],
   ) {
-    // return await this.postsRepository.update(id, {
-    //   title,
-    //   content,
-    // });
-
     const post = await this.postsRepository.findOne({
       where: { id },
       relations: {
         tags: true,
+        files: true,
       },
     });
 
     post.tags = tags;
+    post.files = files;
 
     await this.postsRepository.save(post);
 
@@ -92,5 +102,36 @@ export class PostsRepository {
 
   async deletePost(id: number) {
     return this.postsRepository.delete(id);
+  }
+
+  async checkDuplicateFile(key: string) {
+    const file = await this.filesRepository.findOne({
+      where: {
+        key,
+      },
+    });
+
+    return file;
+  }
+
+  async uploadFile(key: string) {
+    const file = await this.filesRepository.create({
+      key,
+    });
+
+    await this.filesRepository.save(file);
+
+    return file;
+  }
+
+  async updateFile(id: number, fileName: string) {
+    const post = await this.postsRepository.findOne({
+      where: { id },
+      relations: {
+        files: true,
+      },
+    });
+
+    return 'upload File';
   }
 }

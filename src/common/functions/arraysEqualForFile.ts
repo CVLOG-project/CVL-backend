@@ -1,4 +1,4 @@
-export const arraysEqual = (arr1: any[], arr2: any[]): boolean => {
+export const arraysEqualForFile = (arr1: any[], arr2: any[]): boolean => {
   if (arr1.length !== arr2.length) {
     return false;
   }
@@ -8,7 +8,7 @@ export const arraysEqual = (arr1: any[], arr2: any[]): boolean => {
       return false;
     }
 
-    if (arr1[i].name !== arr2[i].name) {
+    if (arr1[i].key !== arr2[i].key) {
       return false;
     }
   }

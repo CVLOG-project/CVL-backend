@@ -26,13 +26,9 @@ export class TagFoldersService {
     return await this.tagFoldersRepository.getAllFolder(user_id);
   }
 
-  async getOneFolder() {
-    // return await this.tagFoldersRepository.getOneFolder();
-  }
-
   async createFolder(body: TagFolderRequestDto) {
     const { name } = body;
-    const user_id = 2;
+    const user_id = 1;
 
     const user = await this.usersRepository.findOne({
       where: { id: user_id },
@@ -87,6 +83,7 @@ export class TagFoldersService {
     const foundRelations = await this.tagRepository.findAndCount({
       where: {
         folder_id: {
+          id: id,
           user_id: {
             id: user.id,
           },

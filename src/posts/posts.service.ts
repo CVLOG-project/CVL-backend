@@ -1,3 +1,4 @@
+import { AwsService } from './aws.service';
 import { UserEntity } from './../entities/users.entity';
 import { TagEntity } from 'src/entities/tags.entity';
 import { CategoryEntity } from './../entities/categories.entity';
@@ -11,7 +12,9 @@ import {
 import { PostsRepository } from './posts.repository';
 import { PostEntity } from '../entities/posts.entity';
 import { DataSource, Repository } from 'typeorm';
-import { arraysEqual } from 'src/common/functions/arraysEqual';
+import { arraysEqualForTag } from 'src/common/functions/arraysEqualForTag';
+import { FileEntity } from 'src/entities/files.entity';
+import { arraysEqualForFile } from 'src/common/functions/arraysEqualForFile';
 
 @Injectable()
 export class PostsService {
@@ -25,6 +28,7 @@ export class PostsService {
     @InjectDataSource()
     private dataSource: DataSource,
     private readonly postsRepository: PostsRepository,
+    private readonly awsService: AwsService,
   ) {}
 
   async getAllPost() {
@@ -44,9 +48,10 @@ export class PostsService {
   }
 
   async createPost(body: PostRequestDto) {
-    const { title, content, category_id, public_status, tags } = body;
+    const { title, content, category_id, public_status, tags, files } = body;
     const user_id = 1;
     let concatTags: TagEntity[] = [];
+    let concatFiles: FileEntity[] = [];
 
     const user = await this.usersRepository.findOne({
       where: { id: user_id },
@@ -63,24 +68,44 @@ export class PostsService {
     }
 
     if (tags.length !== 0) {
-      for (const tag_name of tags) {
+      for (const tagName of tags) {
         const found = await this.dataSource
           .getRepository(TagEntity)
           .createQueryBuilder('tags')
           .leftJoin('tags.posts', 'posts')
           .where('posts.user_id = :user', { user: user.id })
-          .andWhere('tags.name = :name', { name: tag_name })
+          .andWhere('tags.name = :name', { name: tagName })
           .getOne();
 
         if (found) {
           concatTags = concatTags.concat(found);
         } else {
           const create = await this.tagsRepository.create({
-            name: tag_name,
+            name: tagName,
           });
           await this.tagsRepository.save(create);
 
           concatTags = concatTags.concat(create);
+        }
+      }
+    }
+
+    if (files.length !== 0) {
+      for (const fileUrl of files) {
+        const key = this.awsService.getAwsS3FileKey(fileUrl);
+
+        const found = await this.dataSource
+          .getRepository(FileEntity)
+          .createQueryBuilder('files')
+          .where('files.key = :key', { key: key })
+          .getOne();
+
+        if (found) {
+          concatFiles = concatFiles.concat(found);
+        } else {
+          throw new NotFoundException(
+            `Can't find post with file URL : ${fileUrl}`,
+          );
         }
       }
     }
@@ -92,20 +117,22 @@ export class PostsService {
       public_status,
       category,
       concatTags,
+      concatFiles,
     );
 
     return result;
   }
 
   async updatePost(id: number, body: PostRequestDto) {
-    const { title, content, tags } = body;
+    const { title, content, tags, files } = body;
     const user_id = 1;
     let updateTags: TagEntity[] = [];
+    let concatFiles: FileEntity[] = [];
 
     const found = await this.postsRepository.getOnePost(id);
 
     if (!found) {
-      throw new NotFoundException(`Can't not find post with id: ${id}`);
+      throw new NotFoundException(`Can't find post with id: ${id}`);
     }
 
     const user = await this.usersRepository.findOne({
@@ -135,14 +162,48 @@ export class PostsService {
       }
     }
 
+    if (files.length !== 0) {
+      for (const fileUrl of files) {
+        const key = this.awsService.getAwsS3FileKey(fileUrl);
+
+        const found = await this.dataSource
+          .getRepository(FileEntity)
+          .createQueryBuilder('files')
+          .leftJoinAndSelect('files.post_id', 'post')
+          .andWhere('files.key = :key', { key: key })
+          .getOne();
+
+        if (found.post_id !== null && found.post_id.user_id !== user.id) {
+          throw new BadRequestException(
+            `${fileUrl} file does not belong to id: ${user.id} user `,
+          );
+        }
+
+        if (found) {
+          concatFiles = concatFiles.concat(found);
+        } else {
+          throw new NotFoundException(
+            `Can't find post with file URL : ${fileUrl}`,
+          );
+        }
+      }
+    }
+
     const modifyCheck = await this.postsRepository.getOnePost(id);
 
     if (
       modifyCheck.title === title &&
       modifyCheck.content === content &&
-      arraysEqual(updateTags, modifyCheck.tags)
+      arraysEqualForTag(updateTags, modifyCheck.tags) &&
+      arraysEqualForFile(concatFiles, modifyCheck.files)
     ) {
       throw new BadRequestException('No modifications have been made');
+    }
+
+    if (concatFiles.length !== 0) {
+      for (const file of concatFiles) {
+        delete file.post_id;
+      }
     }
 
     return await this.postsRepository.updatePost(
@@ -150,6 +211,7 @@ export class PostsService {
       title,
       content,
       updateTags,
+      concatFiles,
     );
   }
 
@@ -177,5 +239,15 @@ export class PostsService {
     }
 
     return result;
+  }
+
+  async uploadFile(key: string) {
+    const found = await this.postsRepository.checkDuplicateFile(key);
+
+    if (found) {
+      throw new BadRequestException(`key: ${key} is duplicate`);
+    }
+
+    return await this.postsRepository.uploadFile(key);
   }
 }
