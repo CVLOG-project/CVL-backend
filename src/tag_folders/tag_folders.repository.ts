@@ -20,7 +20,6 @@ export class TagFoldersRepository {
       .where('tag_folders.user_id = :user_id', { user_id })
       .leftJoinAndSelect('tag_folders.tags', 'tags')
       .leftJoin('tags.posts', 'posts')
-      // .where('posts.user_id = :user_id', { user_id })
       .orderBy('tag_folders.name', 'ASC')
       .loadRelationCountAndMap('tags.postsCount', 'tags.posts')
       .loadRelationCountAndMap('tag_folders.tagsCount', 'tag_folders.tags')

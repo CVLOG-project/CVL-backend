@@ -1,3 +1,4 @@
+import { SkipThrottle } from '@nestjs/throttler';
 import { SuccessInterceptor } from './../common/interceptors/success.interceptor';
 import {
   Body,
@@ -14,6 +15,7 @@ import { TagFoldersService } from './tag_folders.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { TagFolderRequestDto } from './tag_folder.request.dto';
 
+@SkipThrottle()
 @Controller('tag_folders')
 @UseInterceptors(SuccessInterceptor)
 export class TagFoldersController {
@@ -23,12 +25,6 @@ export class TagFoldersController {
   @Get()
   async getAllFolder() {
     return await this.tagFoldersService.getAllFolder();
-  }
-
-  @ApiOperation({ summary: 'tag folder 상세 조회' })
-  @Get(':id')
-  async getOneFolder() {
-    return await this.tagFoldersService.getOneFolder();
   }
 
   @ApiOperation({ summary: 'tag folder 등록' })

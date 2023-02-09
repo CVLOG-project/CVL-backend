@@ -24,13 +24,23 @@ export class TagsRepository {
       .getMany();
   }
 
-  async getOneTag(user: UserEntity, name: string) {
+  async getOneTagByName(user: UserEntity, name: string) {
     return await this.dataSource
       .getRepository(TagEntity)
       .createQueryBuilder('tags')
       .leftJoin('tags.posts', 'posts')
       .where('posts.user_id = :user', { user: user.id })
       .andWhere('tags.name = :name', { name })
+      .getOne();
+  }
+
+  async getOneTagById(user: UserEntity, tag_id: number) {
+    return await this.dataSource
+      .getRepository(TagEntity)
+      .createQueryBuilder('tags')
+      .leftJoin('tags.posts', 'posts')
+      .where('posts.user_id = :user', { user: user.id })
+      .andWhere('tags.id = :id', { id: tag_id })
       .getOne();
   }
 
@@ -42,5 +52,13 @@ export class TagsRepository {
     await this.tagsRepository.save(tag);
 
     return tag;
+  }
+
+  async updateTag(tag_id: number, folder_id: number) {
+    return await this.tagsRepository.update(tag_id, {
+      folder_id: {
+        id: folder_id,
+      },
+    });
   }
 }

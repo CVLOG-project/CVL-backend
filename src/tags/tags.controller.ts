@@ -1,9 +1,20 @@
+import { SkipThrottle } from '@nestjs/throttler';
 import { TagsService } from './tags.service';
-import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseInterceptors,
+} from '@nestjs/common';
 import { SuccessInterceptor } from 'src/common/interceptors/success.interceptor';
 import { ApiOperation } from '@nestjs/swagger';
 import { TagRequestDto } from './tag.request.dto';
 
+@SkipThrottle()
 @Controller('tags')
 @UseInterceptors(SuccessInterceptor)
 export class TagsController {
@@ -11,17 +22,28 @@ export class TagsController {
 
   @ApiOperation({ summary: '전체 tag 조회' })
   @Get()
-  getAllTag() {
+  async getAllTag() {
     const user_id = 1;
 
-    return this.tagsService.getAllTag(user_id);
+    return await this.tagsService.getAllTag(user_id);
   }
 
   @ApiOperation({ summary: 'tag 생성' })
   @Post()
-  createTag(@Body() body: TagRequestDto) {
+  async createTag(@Body() body: TagRequestDto) {
     const user_id = 1;
 
-    return this.tagsService.createTag(user_id, body);
+    return await this.tagsService.createTag(user_id, body);
+  }
+
+  @ApiOperation({ summary: 'tag 수정' })
+  @Put(':tag_id/:folder_id')
+  async updateTag(
+    @Param('tag_id', ParseIntPipe) tag_id: number,
+    @Param('folder_id', ParseIntPipe) folder_id: number,
+  ) {
+    const user_id = 1;
+
+    return await this.tagsService.updateTag(user_id, tag_id, folder_id);
   }
 }

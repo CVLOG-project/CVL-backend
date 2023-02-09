@@ -1,3 +1,4 @@
+import { AwsService } from './aws.service';
 import { PostRequestDto } from './posts.request.dto';
 import {
   Controller,
@@ -10,29 +11,38 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  UploadedFile,
 } from '@nestjs/common';
 import { SuccessInterceptor } from './../common/interceptors/success.interceptor';
 import { PostsService } from './posts.service';
 import { ApiOperation } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
 @Controller('posts')
 @UseInterceptors(SuccessInterceptor)
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly awsService: AwsService,
+  ) {}
 
   @ApiOperation({ summary: '전체 post 조회' })
+  @SkipThrottle()
   @Get()
   async getAllPost() {
     return await this.postsService.getAllPost();
   }
 
   @ApiOperation({ summary: 'post 상세 조회' })
+  @SkipThrottle()
   @Get(':id')
   async getOnePost(@Param('id', ParseIntPipe) id: number) {
     return await this.postsService.getOnePost(id);
   }
 
   @ApiOperation({ summary: 'post 등록' })
+  @Throttle(2, 60)
   @Post()
   async createPost(@Body() body: PostRequestDto) {
     return await this.postsService.createPost(body);
@@ -48,6 +58,7 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: 'post partial 수정' })
+  @SkipThrottle()
   @Patch(':id')
   async updatePartialPost(
     @Param('id', ParseIntPipe) id: number,
@@ -57,8 +68,25 @@ export class PostsController {
   }
 
   @ApiOperation({ summary: 'post 삭제' })
+  @SkipThrottle()
   @Delete(':id')
   async deletePost(@Param('id', ParseIntPipe) id: number) {
     return await this.postsService.deletePost(id);
+  }
+
+  @ApiOperation({ summary: 'post 이미지 업로드' })
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('upload')
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.awsService.uploadFileToS3('posts', file);
+
+    const url = this.awsService.getAwsS3FileUrl(result.key);
+
+    const dataInDB = await this.postsService.uploadFile(result.key);
+
+    return {
+      id: dataInDB.id,
+      url: url,
+    };
   }
 }

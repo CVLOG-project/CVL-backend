@@ -11,8 +11,10 @@ import {
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { TagEntity } from './tags.entity';
+import { FileEntity } from './files.entity';
 
 @Entity('posts')
 export class PostEntity extends BaseEntity {
@@ -51,6 +53,11 @@ export class PostEntity extends BaseEntity {
     },
   ])
   category_id: CategoryEntity;
+
+  @OneToMany(() => FileEntity, (file: FileEntity) => file.post_id, {
+    cascade: true,
+  })
+  files: FileEntity[];
 
   @ManyToMany(() => TagEntity, (tag: TagEntity) => tag.posts, {
     cascade: true,

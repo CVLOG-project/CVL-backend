@@ -36,4 +36,7 @@ export class PostRequestDto {
 
   @IsArray()
   tags: string[];
+
+  @IsArray()
+  files: string[];
 }
