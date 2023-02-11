@@ -15,6 +15,7 @@ import {
 } from 'typeorm';
 import { TagEntity } from './tags.entity';
 import { FileEntity } from './files.entity';
+import { UserEntity } from './users.entity';
 
 @Entity('posts')
 export class PostEntity extends BaseEntity {
@@ -27,9 +28,6 @@ export class PostEntity extends BaseEntity {
   @Column('text')
   content: string;
 
-  @Column('int')
-  user_id: number;
-
   @Column('boolean', { default: false })
   public_status: boolean;
 
@@ -41,6 +39,15 @@ export class PostEntity extends BaseEntity {
 
   @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at?: Date | null;
+
+  @ManyToOne(() => UserEntity, (user_id: UserEntity) => user_id.posts)
+  @JoinColumn([
+    {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+  ])
+  user_id: number;
 
   @ManyToOne(
     () => CategoryEntity,
