@@ -9,7 +9,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/users.entity';
 import { Repository } from 'typeorm';
 import { TagsRepository } from './tags.repository';
-import { TagFolderEntity } from 'src/entities/tagFolders.entity';
 
 @Injectable()
 export class TagsService {
@@ -17,23 +16,18 @@ export class TagsService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly tagsRepository: TagsRepository,
-    @InjectRepository(TagFolderEntity)
-    private tagFolderRepository: Repository<TagFolderEntity>,
-    private tagFoldersRepository: TagFoldersRepository,
+    private readonly tagFoldersRepository: TagFoldersRepository,
   ) {}
 
-  async getAllTag(user_id) {
-    return await this.tagsRepository.getAllTag(user_id);
+  async getAllTag(user: UserEntity) {
+    return await this.tagsRepository.getAllTag(user);
   }
 
-  async createTag(user_id: number, body: TagRequestDto) {
+  async createTag(user: UserEntity, body: TagRequestDto) {
     const { name } = body;
-    const user = await this.userRepository.findOne({
-      where: { id: user_id },
-    });
 
     if (!user) {
-      throw new NotFoundException(`Can't find user with user_id: ${user_id}`);
+      throw new NotFoundException(`Can't find user with user_id: ${user.id}`);
     }
 
     const found = await this.tagsRepository.getOneTagByName(user, name);
@@ -45,13 +39,9 @@ export class TagsService {
     return await this.tagsRepository.createTag(name);
   }
 
-  async updateTag(user_id: number, tag_id: number, folder_id: number) {
-    const user = await this.userRepository.findOne({
-      where: { id: user_id },
-    });
-
+  async updateTag(user: UserEntity, tag_id: number, folder_id: number) {
     if (!user) {
-      throw new NotFoundException(`Can't find user with user_id: ${user_id}`);
+      throw new NotFoundException(`Can't find user with user_id: ${user.id}`);
     }
 
     const foundTag = await this.tagsRepository.getOneTagById(user, tag_id);

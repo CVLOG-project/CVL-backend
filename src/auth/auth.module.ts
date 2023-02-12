@@ -14,13 +14,14 @@ import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_ACCESS_TOKEN_SECRET_KEY,
-      signOptions:{
-        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME
-      }
+      signOptions: {
+        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
+      },
     }),
-    TypeOrmModule.forFeature([UserEntity,UsersRepository])],
-    exports: [AuthService, PassportModule],
-    controllers: [AuthController],
-    providers: [AuthService, UsersRepository, JwtRefreshTokenGuard]
+    TypeOrmModule.forFeature([UserEntity, UsersRepository]),
+  ],
+  exports: [AuthService, PassportModule],
+  controllers: [AuthController],
+  providers: [AuthService, UsersRepository, JwtRefreshTokenGuard],
 })
 export class AuthModule {}

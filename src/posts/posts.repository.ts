@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { FileEntity } from 'src/entities/files.entity';
+import { UserEntity } from 'src/entities/users.entity';
 
 @Injectable()
 export class PostsRepository {
@@ -32,7 +33,7 @@ export class PostsRepository {
   async createPost(
     title: string,
     content: string,
-    user_id: number,
+    user: UserEntity,
     public_status: boolean,
     category: CategoryEntity,
     concatTags: TagEntity[],
@@ -41,7 +42,7 @@ export class PostsRepository {
     const post = this.postsRepository.create({
       title,
       content,
-      user_id,
+      user_id: user,
       public_status,
     });
 
@@ -122,16 +123,5 @@ export class PostsRepository {
     await this.filesRepository.save(file);
 
     return file;
-  }
-
-  async updateFile(id: number, fileName: string) {
-    const post = await this.postsRepository.findOne({
-      where: { id },
-      relations: {
-        files: true,
-      },
-    });
-
-    return 'upload File';
   }
 }

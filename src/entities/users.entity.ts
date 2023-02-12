@@ -51,12 +51,8 @@ export class UserEntity extends BaseEntity {
   )
   tag_folders: TagFolderEntity[];
 
-  @OneToMany(
-    () => PostEntity,
-    (post: PostEntity) => post.user_id,
-    {
-      cascade: true,
-    },
-  )
+  @OneToMany(() => PostEntity, (post: PostEntity) => post.user_id, {
+    cascade: true,
+  })
   posts: PostEntity[];
 }

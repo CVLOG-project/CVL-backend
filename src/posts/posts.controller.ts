@@ -1,3 +1,4 @@
+import { UserEntity } from 'src/entities/users.entity';
 import { AwsService } from './aws.service';
 import { PostRequestDto } from './posts.request.dto';
 import {
@@ -12,15 +13,19 @@ import {
   Param,
   ParseIntPipe,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { SuccessInterceptor } from './../common/interceptors/success.interceptor';
 import { PostsService } from './posts.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { GetUser } from 'src/auth/auth.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('posts')
 @UseInterceptors(SuccessInterceptor)
+@UseGuards(JwtAuthGuard)
 export class PostsController {
   constructor(
     private readonly postsService: PostsService,
@@ -30,8 +35,8 @@ export class PostsController {
   @ApiOperation({ summary: '전체 post 조회' })
   @SkipThrottle()
   @Get()
-  async getAllPost() {
-    return await this.postsService.getAllPost();
+  async getAllPost(@GetUser() user: UserEntity) {
+    return await this.postsService.getAllPost(user);
   }
 
   @ApiOperation({ summary: 'post 상세 조회' })
@@ -44,8 +49,8 @@ export class PostsController {
   @ApiOperation({ summary: 'post 등록' })
   @Throttle(2, 60)
   @Post()
-  async createPost(@Body() body: PostRequestDto) {
-    return await this.postsService.createPost(body);
+  async createPost(@Body() body: PostRequestDto, @GetUser() user: UserEntity) {
+    return await this.postsService.createPost(body, user);
   }
 
   @ApiOperation({ summary: 'post 수정' })
@@ -53,8 +58,9 @@ export class PostsController {
   async updatePost(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: PostRequestDto,
+    @GetUser() user: UserEntity,
   ) {
-    return await this.postsService.updatePost(id, body);
+    return await this.postsService.updatePost(id, body, user);
   }
 
   @ApiOperation({ summary: 'post partial 수정' })
@@ -86,6 +92,7 @@ export class PostsController {
 
     return {
       id: dataInDB.id,
+      name: file.originalname,
       url: url,
     };
   }

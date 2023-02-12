@@ -47,7 +47,7 @@ export class PostEntity extends BaseEntity {
       referencedColumnName: 'id',
     },
   ])
-  user_id: number;
+  user_id: UserEntity;
 
   @ManyToOne(
     () => CategoryEntity,
