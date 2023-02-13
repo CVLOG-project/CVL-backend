@@ -13,12 +13,12 @@ export class TagsRepository {
     private dataSource: DataSource,
   ) {}
 
-  async getAllTag(user_id) {
+  async getAllTag(user: UserEntity) {
     return await this.dataSource
       .getRepository(TagEntity)
       .createQueryBuilder('tags')
       .leftJoin('tags.posts', 'posts')
-      .where('posts.user_id = :user_id', { user_id })
+      .where('posts.user_id = :user_id', { user_id: user.id })
       .orderBy('tags.name', 'ASC')
       .loadRelationCountAndMap('tags.postsCount', 'tags.posts')
       .getMany();

@@ -31,8 +31,8 @@ export class PostsService {
     private readonly awsService: AwsService,
   ) {}
 
-  async getAllPost() {
-    const user_id = 1; //after complete jwt, insert decoding user_id
+  async getAllPost(user: UserEntity) {
+    const user_id = user.id;
 
     return await this.postsRepository.getAllPost(user_id);
   }
@@ -47,15 +47,11 @@ export class PostsService {
     return found;
   }
 
-  async createPost(body: PostRequestDto) {
+  async createPost(body: PostRequestDto, user: UserEntity) {
     const { title, content, category_id, public_status, tags, files } = body;
-    const user_id = 1;
+
     let concatTags: TagEntity[] = [];
     let concatFiles: FileEntity[] = [];
-
-    const user = await this.usersRepository.findOne({
-      where: { id: user_id },
-    });
 
     const category = await this.categoriesRepository.findOne({
       where: { id: category_id },
@@ -113,7 +109,7 @@ export class PostsService {
     const result = await this.postsRepository.createPost(
       title,
       content,
-      user_id,
+      user,
       public_status,
       category,
       concatTags,
@@ -123,9 +119,9 @@ export class PostsService {
     return result;
   }
 
-  async updatePost(id: number, body: PostRequestDto) {
+  async updatePost(id: number, body: PostRequestDto, user: UserEntity) {
     const { title, content, tags, files } = body;
-    const user_id = 1;
+
     let updateTags: TagEntity[] = [];
     let concatFiles: FileEntity[] = [];
 
@@ -134,10 +130,6 @@ export class PostsService {
     if (!found) {
       throw new NotFoundException(`Can't find post with id: ${id}`);
     }
-
-    const user = await this.usersRepository.findOne({
-      where: { id: user_id },
-    });
 
     if (tags.length !== 0) {
       for (const tag_name of tags) {
@@ -173,7 +165,7 @@ export class PostsService {
           .andWhere('files.key = :key', { key: key })
           .getOne();
 
-        if (found.post_id !== null && found.post_id.user_id !== user.id) {
+        if (found.post_id !== null && found.post_id.user_id !== user) {
           throw new BadRequestException(
             `${fileUrl} file does not belong to id: ${user.id} user `,
           );

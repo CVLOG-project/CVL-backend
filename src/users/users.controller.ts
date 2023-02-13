@@ -9,8 +9,8 @@ import { UsersService } from './users.service';
 @UseInterceptors(SuccessInterceptor)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-    
-  @ApiOperation({ summary: '유저 정보 조회'})
+
+  @ApiOperation({ summary: '유저 정보 조회' })
   @UseGuards(JwtAuthGuard)
   @Get('/info')
   getUserInfo(@GetUser() id) {

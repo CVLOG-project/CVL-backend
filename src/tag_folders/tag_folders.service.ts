@@ -20,22 +20,19 @@ export class TagFoldersService {
     private tagRepository: Repository<TagEntity>,
   ) {}
 
-  async getAllFolder() {
-    const user_id = 1;
-
-    return await this.tagFoldersRepository.getAllFolder(user_id);
+  async getAllFolder(user: UserEntity) {
+    return await this.tagFoldersRepository.getAllFolder(user);
   }
 
-  async createFolder(body: TagFolderRequestDto) {
+  async createFolder(body: TagFolderRequestDto, user: UserEntity) {
     const { name } = body;
-    const user_id = 1;
 
-    const user = await this.usersRepository.findOne({
-      where: { id: user_id },
-    });
+    if (name.length === 0) {
+      throw new BadRequestException(`Can't make folder for empty name`);
+    }
 
     if (!user) {
-      throw new NotFoundException(`Can't find user with user_id: ${user_id}`);
+      throw new NotFoundException(`Can't find user with user_id: ${user.id}`);
     }
 
     const found = await this.tagFoldersRepository.getOneFolderByUserId(
@@ -50,13 +47,8 @@ export class TagFoldersService {
     return await this.tagFoldersRepository.createFolder(name, user);
   }
 
-  async updateFolder(id: number, body: TagFolderRequestDto) {
+  async updateFolder(id: number, body: TagFolderRequestDto, user: UserEntity) {
     const { name } = body;
-    const user_id = 1;
-
-    const user = await this.usersRepository.findOne({
-      where: { id: user_id },
-    });
 
     const found = await this.tagFoldersRepository.getOneFolderById(id, user);
 
@@ -67,13 +59,7 @@ export class TagFoldersService {
     return await this.tagFoldersRepository.updateFolder(id, name);
   }
 
-  async deleteFolder(id: number) {
-    const user_id = 1;
-
-    const user = await this.usersRepository.findOne({
-      where: { id: user_id },
-    });
-
+  async deleteFolder(id: number, user: UserEntity) {
     const found = await this.tagFoldersRepository.getOneFolderById(id, user);
 
     if (!found) {

@@ -13,11 +13,11 @@ export class TagFoldersRepository {
     private dataSource: DataSource,
   ) {}
 
-  async getAllFolder(user_id: number) {
+  async getAllFolder(user: UserEntity) {
     return await this.dataSource
       .getRepository(TagFolderEntity)
       .createQueryBuilder('tag_folders')
-      .where('tag_folders.user_id = :user_id', { user_id })
+      .where('tag_folders.user_id = :user_id', { user_id: user.id })
       .leftJoinAndSelect('tag_folders.tags', 'tags')
       .leftJoin('tags.posts', 'posts')
       .orderBy('tag_folders.name', 'ASC')

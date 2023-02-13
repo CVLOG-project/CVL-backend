@@ -1,14 +1,13 @@
-import { 
+import {
   Controller,
   Get,
   Header,
   Headers,
   Post,
   Query,
-  Req,
   Res,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOperation } from '@nestjs/swagger';
@@ -23,13 +22,19 @@ import { GetUser } from './auth.decorator';
 @UseInterceptors(SuccessInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  
+
   @ApiOperation({ summary: 'user 회원가입 및 로그인' })
   @Get('login')
-  public async getGithubInfo(@Query() githubCodeDto: GithubCodeDto, @Res({ passthrough: true }) res: Response) : Promise<{ accessToken: string }> {
+  public async getGithubInfo(
+    @Query() githubCodeDto: GithubCodeDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ accessToken: string }> {
     await this.authService.getGithubInfo;
-    const accessToken = await this.authService.getGithubInfo(githubCodeDto, res);
-    
+    const accessToken = await this.authService.getGithubInfo(
+      githubCodeDto,
+      res,
+    );
+
     return accessToken;
   }
 
@@ -41,14 +46,14 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Headers('refreshToken') refreshToken: string,
     @GetUser() user: UserEntity,
-  ) { 
-    if( this.authService.validationRefreshToken(refreshToken, user.github_id) ) {
+  ) {
+    if (this.authService.validationRefreshToken(refreshToken, user.github_id)) {
       const accessToken = await this.authService.createAccessToken(user.id);
-      
+
       return accessToken;
     }
   }
-  
+
   @ApiOperation({ summary: 'user 로그아웃' })
   @Get('/logout')
   @UseGuards(JwtRefreshTokenGuard)
