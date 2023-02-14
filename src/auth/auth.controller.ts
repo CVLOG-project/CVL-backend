@@ -17,7 +17,9 @@ import { Response } from 'express';
 import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
 import { UserEntity } from 'src/entities/users.entity';
 import { GetUser } from './auth.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('auth')
 @UseInterceptors(SuccessInterceptor)
 export class AuthController {

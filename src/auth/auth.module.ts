@@ -7,6 +7,8 @@ import { UserEntity } from '../entities/users.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
+import { CommentsModule } from 'src/comments/comments.module';
+import { JwtStrategy } from './jwt.strategy';
 
 @Global()
 @Module({
@@ -20,8 +22,8 @@ import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
     }),
     TypeOrmModule.forFeature([UserEntity, UsersRepository]),
   ],
-  exports: [AuthService, PassportModule],
+  exports: [AuthService, PassportModule, JwtStrategy],
   controllers: [AuthController],
-  providers: [AuthService, UsersRepository, JwtRefreshTokenGuard],
+  providers: [AuthService, UsersRepository, JwtRefreshTokenGuard, JwtStrategy],
 })
 export class AuthModule {}
