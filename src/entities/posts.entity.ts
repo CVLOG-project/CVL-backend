@@ -16,6 +16,7 @@ import {
 import { TagEntity } from './tags.entity';
 import { FileEntity } from './files.entity';
 import { UserEntity } from './users.entity';
+import { CommentEntity } from './comments.entity';
 
 @Entity('posts')
 export class PostEntity extends BaseEntity {
@@ -81,4 +82,9 @@ export class PostEntity extends BaseEntity {
     },
   })
   tags: TagEntity[];
+
+  @OneToMany(() => CommentEntity, (comment: CommentEntity) => comment.post_id, {
+    cascade: true,
+  })
+  comments: CommentEntity[];
 }

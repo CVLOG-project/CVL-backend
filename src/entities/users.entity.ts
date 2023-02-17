@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { PostEntity } from './posts.entity';
+import { CommentEntity } from './comments.entity';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
@@ -55,4 +56,9 @@ export class UserEntity extends BaseEntity {
     cascade: true,
   })
   posts: PostEntity[];
+
+  @OneToMany(() => CommentEntity, (comment: CommentEntity) => comment.user_id, {
+    cascade: true,
+  })
+  comments: CommentEntity[];
 }

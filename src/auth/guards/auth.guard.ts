@@ -33,6 +33,7 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const payload = await this.authService.validationAccessToken(accessToken);
+
     req.user = await this.usersRepository.findOne({
       where: { id: payload.id },
     });
