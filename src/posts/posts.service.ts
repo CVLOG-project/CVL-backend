@@ -15,6 +15,7 @@ import { DataSource, Repository } from 'typeorm';
 import { arraysEqualForTag } from 'src/common/functions/arraysEqualForTag';
 import { FileEntity } from 'src/entities/files.entity';
 import { arraysEqualForFile } from 'src/common/functions/arraysEqualForFile';
+import { TagFoldersRepository } from 'src/tag_folders/tag_folders.repository';
 
 @Injectable()
 export class PostsService {
@@ -29,12 +30,11 @@ export class PostsService {
     private dataSource: DataSource,
     private readonly postsRepository: PostsRepository,
     private readonly awsService: AwsService,
+    private readonly tagfoldersrepository: TagFoldersRepository,
   ) {}
 
   async getAllPost(user: UserEntity) {
-    const user_id = user.id;
-
-    return await this.postsRepository.getAllPost(user_id);
+    return await this.postsRepository.getAllPost(user);
   }
 
   async getOnePost(id: number): Promise<PostEntity> {
@@ -64,6 +64,9 @@ export class PostsService {
     }
 
     if (tags.length !== 0) {
+      const findDefaultFolder =
+        await this.tagfoldersrepository.getOneFolderByUserId('', user);
+
       for (const tagName of tags) {
         const found = await this.dataSource
           .getRepository(TagEntity)
@@ -79,6 +82,7 @@ export class PostsService {
           const create = await this.tagsRepository.create({
             name: tagName,
           });
+          create.folder_id = findDefaultFolder;
           await this.tagsRepository.save(create);
 
           concatTags = concatTags.concat(create);

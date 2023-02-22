@@ -12,6 +12,8 @@ import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule } from '@nestjs/config';
 import { AwsService } from './aws.service';
 import * as multer from 'multer';
+import { TagFoldersRepository } from 'src/tag_folders/tag_folders.repository';
+import { TagFolderEntity } from 'src/entities/tagFolders.entity';
 
 @Module({
   imports: [
@@ -29,9 +31,11 @@ import * as multer from 'multer';
       TagEntity,
       UserEntity,
       FileEntity,
+      TagFolderEntity,
+      TagFoldersRepository,
     ]),
   ],
   controllers: [PostsController],
-  providers: [PostsService, PostsRepository, AwsService],
+  providers: [PostsService, PostsRepository, AwsService, TagFoldersRepository],
 })
 export class PostsModule {}

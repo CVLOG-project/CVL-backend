@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
 import { CommentsModule } from 'src/comments/comments.module';
 import { JwtStrategy } from './jwt.strategy';
+import { TagFolderEntity } from 'src/entities/tagFolders.entity';
 
 @Global()
 @Module({
@@ -20,7 +21,7 @@ import { JwtStrategy } from './jwt.strategy';
         expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME,
       },
     }),
-    TypeOrmModule.forFeature([UserEntity, UsersRepository]),
+    TypeOrmModule.forFeature([UserEntity, UsersRepository, TagFolderEntity]),
   ],
   exports: [AuthService, PassportModule, JwtStrategy],
   controllers: [AuthController],
