@@ -10,7 +10,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PostsRepository } from './posts.repository';
-import { PostEntity } from '../entities/posts.entity';
 import { DataSource, Repository } from 'typeorm';
 import { arraysEqualForTag } from 'src/common/functions/arraysEqualForTag';
 import { FileEntity } from 'src/entities/files.entity';
@@ -33,18 +32,47 @@ export class PostsService {
     private readonly tagfoldersrepository: TagFoldersRepository,
   ) {}
 
-  async getAllPost(user: UserEntity) {
-    return await this.postsRepository.getAllPost(user);
+  async getAllPost(user: UserEntity, page: number) {
+    const PAGE_SIZE = 10;
+
+    const CountPost = await this.postsRepository.getAllPostCount(user);
+
+    const maxPage = Math.floor(CountPost / 10) + 1;
+
+    if (page <= 0 || maxPage < page) {
+      throw new BadRequestException(`page: ${page} is invalid`);
+    }
+
+    const result = await this.postsRepository.getAllPost(user, page, PAGE_SIZE);
+
+    return { posts: result, maxPage };
   }
 
-  async getOnePost(id: number): Promise<PostEntity> {
+  async getOnePost(user: UserEntity, id: number) {
     const found = await this.postsRepository.getOnePost(id);
 
     if (!found) {
       throw new NotFoundException(`Can't find post with id: ${id}`);
     }
 
-    return found;
+    if (found.user_id.id !== user.id) {
+      throw new BadRequestException(`Post details are visible only to owner`);
+    }
+
+    const prevPost = await this.postsRepository.getPrevPost(user, found);
+    const nextPost = await this.postsRepository.getNextPost(user, found);
+
+    const result = {
+      post: found,
+      prevPostInfo: prevPost
+        ? { id: prevPost.id, title: prevPost.title }
+        : null,
+      nextPostInfo: nextPost
+        ? { id: nextPost.id, title: nextPost.title }
+        : null,
+    };
+
+    return result;
   }
 
   async createPost(body: PostRequestDto, user: UserEntity) {
