@@ -16,9 +16,13 @@ export class PostsRepository {
     private filesRepository: Repository<FileEntity>,
   ) {}
 
-  async getAllPost(user_id) {
+  async getAllPost(user: UserEntity) {
     return await this.postsRepository.find({
-      where: { user_id },
+      where: {
+        user_id: {
+          id: user.id,
+        },
+      },
       relations: { tags: true },
     });
   }

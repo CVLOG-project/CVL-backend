@@ -2,12 +2,15 @@ import { UserEntity } from '../entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { TagFolderEntity } from 'src/entities/tagFolders.entity';
 
 @Injectable()
 export class UsersRepository {
   constructor(
     @InjectRepository(UserEntity)
     private usersRepository: Repository<UserEntity>,
+    @InjectRepository(TagFolderEntity)
+    private tagfoldersRepository: Repository<TagFolderEntity>,
   ) {}
 
   async createUser(
@@ -24,6 +27,22 @@ export class UsersRepository {
       description,
       profile_image,
     });
+
+    await this.usersRepository.save(user);
+
+    let defaultFolder: TagFolderEntity[] = [];
+
+    const create = this.tagfoldersRepository.create({
+      name: '',
+    });
+
+    create.user_id = user;
+
+    await this.tagfoldersRepository.save(create);
+
+    defaultFolder = defaultFolder.concat(create);
+
+    user.tag_folders = defaultFolder;
 
     await this.usersRepository.save(user);
 
