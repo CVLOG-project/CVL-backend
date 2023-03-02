@@ -34,16 +34,22 @@ export class PostsController {
 
   @ApiOperation({ summary: '전체 post 조회' })
   @SkipThrottle()
-  @Get()
-  async getAllPost(@GetUser() user: UserEntity) {
-    return await this.postsService.getAllPost(user);
+  @Get('/page/:page')
+  async getAllPost(
+    @GetUser() user: UserEntity,
+    @Param('page', ParseIntPipe) page: number,
+  ) {
+    return await this.postsService.getAllPost(user, page);
   }
 
   @ApiOperation({ summary: 'post 상세 조회' })
   @SkipThrottle()
   @Get(':id')
-  async getOnePost(@Param('id', ParseIntPipe) id: number) {
-    return await this.postsService.getOnePost(id);
+  async getOnePost(
+    @GetUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.postsService.getOnePost(user, id);
   }
 
   @ApiOperation({ summary: 'post 등록' })

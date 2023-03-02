@@ -3,7 +3,7 @@ import { CategoryEntity } from './../entities/categories.entity';
 import { PostEntity } from '../entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { FileEntity } from 'src/entities/files.entity';
 import { UserEntity } from 'src/entities/users.entity';
 
@@ -16,13 +16,15 @@ export class PostsRepository {
     private filesRepository: Repository<FileEntity>,
   ) {}
 
-  async getAllPost(user: UserEntity) {
+  async getAllPost(user: UserEntity, page: number, PAGE_SIZE: number) {
     return await this.postsRepository.find({
       where: {
         user_id: {
           id: user.id,
         },
       },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
       relations: { tags: true },
     });
   }
@@ -30,7 +32,39 @@ export class PostsRepository {
   async getOnePost(id: number) {
     return await this.postsRepository.findOne({
       where: { id },
-      relations: { tags: true, files: true },
+      relations: { tags: true, files: true, user_id: true },
+    });
+  }
+
+  async getNextPost(user: UserEntity, post: PostEntity) {
+    return await this.postsRepository
+      .createQueryBuilder('post')
+      .where('post.user_id = :id', { id: user.id })
+      .andWhere('post.id > :post_id', {
+        post_id: post.id,
+      })
+      .orderBy('post.id', 'ASC')
+      .getOne();
+  }
+
+  async getPrevPost(user: UserEntity, post: PostEntity) {
+    return await this.postsRepository
+      .createQueryBuilder('post')
+      .where('post.user_id = :id', { id: user.id })
+      .andWhere('post.id < :post_id', {
+        post_id: post.id,
+      })
+      .orderBy('post.id', 'DESC')
+      .getOne();
+  }
+
+  async getAllPostCount(user: UserEntity) {
+    return await this.postsRepository.count({
+      where: {
+        user_id: {
+          id: user.id,
+        },
+      },
     });
   }
 
