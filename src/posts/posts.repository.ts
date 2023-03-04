@@ -3,7 +3,7 @@ import { CategoryEntity } from './../entities/categories.entity';
 import { PostEntity } from '../entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { MoreThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { FileEntity } from 'src/entities/files.entity';
 import { UserEntity } from 'src/entities/users.entity';
 
@@ -25,6 +25,7 @@ export class PostsRepository {
       },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
+      order: { created_at: 'DESC' },
       relations: { tags: true },
     });
   }
