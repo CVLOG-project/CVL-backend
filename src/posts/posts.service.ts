@@ -6,6 +6,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PostRequestDto } from './posts.request.dto';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -260,13 +261,38 @@ export class PostsService {
   }
 
   async deletePost(id: number) {
-    const result = await this.postsRepository.deletePost(id);
+    const post = await this.postsRepository.getOnePost(id);
 
-    if (result.affected === 0) {
-      throw new NotFoundException(`Can't not find post with id: ${id}`);
+    if (!post) {
+      throw new NotFoundException(`Post with id: ${id} not found.`);
     }
 
-    return result;
+    const tagId = post.tags.map((tag) => tag.id);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await this.postsRepository.deletePost(id);
+
+      if (tagId.length !== 0) {
+        for (const id of tagId) {
+          await this.tagsRepository.delete({ id });
+        }
+      }
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+
+      throw new ConflictException(`delete transaction error`);
+    } finally {
+      await queryRunner.release();
+
+      return 'delete success';
+    }
   }
 
   async uploadFile(key: string) {
