@@ -164,6 +164,9 @@ export class PostsService {
     }
 
     if (tags.length !== 0) {
+      const findDefaultFolder =
+        await this.tagfoldersrepository.getOneFolderByUserId('', user);
+
       for (const tag_name of tags) {
         const found = await this.dataSource
           .getRepository(TagEntity)
@@ -179,6 +182,7 @@ export class PostsService {
           const create = await this.tagsRepository.create({
             name: tag_name,
           });
+          create.folder_id = findDefaultFolder;
           await this.tagsRepository.save(create);
 
           updateTags = updateTags.concat(create);
