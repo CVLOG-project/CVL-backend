@@ -49,7 +49,7 @@ export class AuthController {
     @Headers('refreshToken') refreshToken: string,
     @GetUser() user: UserEntity,
   ) {
-    if (this.authService.validationRefreshToken(refreshToken, user.github_id)) {
+    if (await this.authService.validationRefreshToken(refreshToken, user)) {
       const accessToken = await this.authService.createAccessToken(user.id);
 
       return accessToken;

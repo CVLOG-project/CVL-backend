@@ -9,6 +9,7 @@ import axios, { AxiosResponse } from 'axios';
 import { UsersRepository } from '../users/users.repository';
 import { GithubCodeDto, GithubUserDto } from '../users/users.dto';
 import { Response } from 'express';
+import { UserEntity } from 'src/entities/users.entity';
 
 @Injectable()
 export class AuthService {
@@ -106,9 +107,7 @@ export class AuthService {
     return refreshToken;
   }
 
-  async validationRefreshToken(refreshToken: string, github_id: string) {
-    const user = await this.usersRepository.getOneUserByGithubId(github_id);
-
+  async validationRefreshToken(refreshToken: string, user: UserEntity) {
     if (refreshToken !== user.refresh_token) {
       throw new UnauthorizedException('error.refreshTokenvailed');
     }
