@@ -24,8 +24,6 @@ export class PostsService {
     private categoriesRepository: Repository<CategoryEntity>,
     @InjectRepository(TagEntity)
     private tagsRepository: Repository<TagEntity>,
-    @InjectRepository(UserEntity)
-    private usersRepository: Repository<UserEntity>,
     @InjectDataSource()
     private dataSource: DataSource,
     private readonly postsRepository: PostsRepository,
@@ -164,84 +162,121 @@ export class PostsService {
       throw new NotFoundException(`Can't find post with id: ${id}`);
     }
 
-    if (tags.length !== 0) {
-      const findDefaultFolder =
-        await this.tagfoldersrepository.getOneFolderByUserId('', user);
+    const queryRunner = this.dataSource.createQueryRunner();
 
-      for (const tag_name of tags) {
-        const found = await this.dataSource
-          .getRepository(TagEntity)
-          .createQueryBuilder('tags')
-          .leftJoin('tags.posts', 'posts')
-          .where('posts.user_id = :user', { user: user.id })
-          .andWhere('tags.name = :name', { name: tag_name })
-          .getOne();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-        if (found) {
-          updateTags = updateTags.concat(found);
-        } else {
-          const create = await this.tagsRepository.create({
-            name: tag_name,
+    try {
+      if (tags.length !== 0) {
+        const findDefaultFolder =
+          await this.tagfoldersrepository.getOneFolderByUserId('', user);
+
+        for (const tag_name of tags) {
+          const found = await this.dataSource
+            .getRepository(TagEntity)
+            .createQueryBuilder('tags')
+            .leftJoin('tags.posts', 'posts')
+            .where('posts.user_id = :user', { user: user.id })
+            .andWhere('tags.name = :name', { name: tag_name })
+            .getOne();
+
+          if (found) {
+            updateTags = updateTags.concat(found);
+          } else {
+            const create = await this.tagsRepository.create({
+              name: tag_name,
+            });
+            create.folder_id = findDefaultFolder;
+            await this.tagsRepository.save(create);
+
+            updateTags = updateTags.concat(create);
+          }
+        }
+      }
+
+      if (files.length !== 0) {
+        for (const fileUrl of files) {
+          const key = this.awsService.getAwsS3FileKey(fileUrl);
+
+          const found = await this.dataSource
+            .getRepository(FileEntity)
+            .createQueryBuilder('files')
+            .leftJoinAndSelect('files.post_id', 'post')
+            .andWhere('files.key = :key', { key: key })
+            .getOne();
+
+          if (found.post_id !== null && found.post_id.user_id !== user) {
+            throw new BadRequestException(
+              `${fileUrl} file does not belong to id: ${user.id} user `,
+            );
+          }
+
+          if (found) {
+            concatFiles = concatFiles.concat(found);
+          } else {
+            throw new NotFoundException(
+              `Can't find post with file URL : ${fileUrl}`,
+            );
+          }
+        }
+      }
+
+      const modifyCheck = await this.postsRepository.getOnePost(id);
+
+      if (
+        modifyCheck.title === title &&
+        modifyCheck.content === content &&
+        arraysEqualForTag(updateTags, modifyCheck.tags) &&
+        arraysEqualForFile(concatFiles, modifyCheck.files)
+      ) {
+        throw new BadRequestException('No modifications have been made');
+      }
+
+      if (concatFiles.length !== 0) {
+        for (const file of concatFiles) {
+          delete file.post_id;
+        }
+      }
+
+      await this.postsRepository.updatePost(
+        id,
+        title,
+        content,
+        updateTags,
+        concatFiles,
+      );
+
+      const updateTagName = updateTags.map((el) => el.name);
+      const deleteTagId = found.tags
+        .filter((el) => !updateTagName.includes(el.name))
+        .map((el) => el.id);
+
+      if (deleteTagId.length !== 0) {
+        for (const id of deleteTagId) {
+          const tag = await this.tagsRepository.findOne({
+            where: { id },
+            relations: { posts: true },
           });
-          create.folder_id = findDefaultFolder;
-          await this.tagsRepository.save(create);
 
-          updateTags = updateTags.concat(create);
+          if (tag.posts.length !== 0) {
+            await this.tagsRepository.save(tag);
+          } else {
+            await this.tagsRepository.delete({ id });
+          }
         }
       }
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+
+      throw new ConflictException(`update transaction error`);
+    } finally {
+      await queryRunner.release();
+
+      return 'update success';
     }
-
-    if (files.length !== 0) {
-      for (const fileUrl of files) {
-        const key = this.awsService.getAwsS3FileKey(fileUrl);
-
-        const found = await this.dataSource
-          .getRepository(FileEntity)
-          .createQueryBuilder('files')
-          .leftJoinAndSelect('files.post_id', 'post')
-          .andWhere('files.key = :key', { key: key })
-          .getOne();
-
-        if (found.post_id !== null && found.post_id.user_id !== user) {
-          throw new BadRequestException(
-            `${fileUrl} file does not belong to id: ${user.id} user `,
-          );
-        }
-
-        if (found) {
-          concatFiles = concatFiles.concat(found);
-        } else {
-          throw new NotFoundException(
-            `Can't find post with file URL : ${fileUrl}`,
-          );
-        }
-      }
-    }
-
-    const modifyCheck = await this.postsRepository.getOnePost(id);
-
-    if (
-      modifyCheck.title === title &&
-      modifyCheck.content === content &&
-      arraysEqualForTag(updateTags, modifyCheck.tags) &&
-      arraysEqualForFile(concatFiles, modifyCheck.files)
-    ) {
-      throw new BadRequestException('No modifications have been made');
-    }
-
-    if (concatFiles.length !== 0) {
-      for (const file of concatFiles) {
-        delete file.post_id;
-      }
-    }
-
-    return await this.postsRepository.updatePost(
-      id,
-      title,
-      content,
-      updateTags,
-      concatFiles,
-    );
   }
 
   async updatePartialPost(id: number, public_status: boolean) {
@@ -279,7 +314,16 @@ export class PostsService {
 
       if (tagId.length !== 0) {
         for (const id of tagId) {
-          await this.tagsRepository.delete({ id });
+          const tag = await this.tagsRepository.findOne({
+            where: { id },
+            relations: { posts: true },
+          });
+
+          if (tag.posts.length !== 0) {
+            await this.tagsRepository.save(tag);
+          } else {
+            await this.tagsRepository.delete({ id });
+          }
         }
       }
 
