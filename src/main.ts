@@ -28,7 +28,9 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://www.logme.pro'],
+    credentials: true,
+    methods: 'GET,PUT,PATCH,POST,DELETE',
   });
 
   await app.listen(PORT);
