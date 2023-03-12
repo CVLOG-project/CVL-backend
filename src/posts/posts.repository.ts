@@ -25,7 +25,7 @@ export class PostsRepository {
       },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      order: { created_at: 'DESC' },
+      order: { updated_at: 'DESC' },
       relations: { tags: true },
     });
   }
