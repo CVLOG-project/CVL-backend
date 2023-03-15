@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentEntity } from 'src/entities/comments.entity';
+import { PostEntity } from 'src/entities/posts.entity';
 import { UserEntity } from 'src/entities/users.entity';
 import { Repository } from 'typeorm';
 
@@ -10,8 +11,13 @@ export class CommentsRepository {
     @InjectRepository(CommentEntity)
     private commentsRepository: Repository<CommentEntity>,
   ) {}
+  async getOneComment(id: number) {
+    return await this.commentsRepository.findOne({
+      where: { id },
+    });
+  }
 
-  async getCommentsByPostId(post_id) {
+  async getCommentByPostId(post_id) {
     return await this.commentsRepository
       .createQueryBuilder('comments')
       .select([
@@ -41,5 +47,27 @@ export class CommentsRepository {
     await this.commentsRepository.save(comment);
 
     return comment;
+  }
+
+  async updateComment(id: number, content: string) {
+    const post = await this.commentsRepository.findOne({
+      where: { id },
+    });
+
+    await this.commentsRepository.save(post);
+
+    return await this.commentsRepository.update(id, {
+      content,
+    });
+  }
+
+  async deleteComment(id: number) {
+    const comment = await this.commentsRepository.findOne({
+      where: { id },
+    });
+
+    await this.commentsRepository.save(comment);
+
+    return await this.commentsRepository.delete(id);
   }
 }
