@@ -297,7 +297,7 @@ export class PostsService {
 
   async deletePost(id: number) {
     const post = await this.postsRepository.getOnePost(id);
-
+    console.log(post);
     if (!post) {
       throw new NotFoundException(`Post with id: ${id} not found.`);
     }
