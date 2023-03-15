@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
   Post,
+  Put,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -26,7 +28,7 @@ export class CommentsController {
   @ApiOperation({ summary: '해당 post 댓글 조회' })
   @Get('/:postId')
   async getCommentsByPostId(@Param('postId', ParseIntPipe) post_id: number) {
-    return await this.commentsService.getCommentsByPostId(post_id);
+    return await this.commentsService.getOneComment(post_id);
   }
 
   @ApiOperation({ summary: '댓글 등록' })
@@ -37,5 +39,23 @@ export class CommentsController {
     @GetUser() user: UserEntity,
   ) {
     return await this.commentsService.createComment(body, user.id);
+  }
+
+  @ApiOperation({ summary: '해당 post 댓글 수정' })
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async updateComment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: CommentRequestDto,
+    @GetUser() user: UserEntity,
+  ) {
+    return await this.commentsService.updateComment(id, body, user);
+  }
+
+  @ApiOperation({ summary: '해당 댓글 삭제' })
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteComment(@Param('id', ParseIntPipe) id: number) {
+    return await this.commentsService.deletePost(id);
   }
 }
