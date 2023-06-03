@@ -12,6 +12,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { PostEntity } from './posts.entity';
 import { CommentEntity } from './comments.entity';
+import { MessageEntity } from './message.entity';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
@@ -61,4 +62,18 @@ export class UserEntity extends BaseEntity {
     cascade: true,
   })
   comments: CommentEntity[];
+
+  @OneToMany(
+    () => MessageEntity,
+    (message: MessageEntity) => message.receiver,
+    {
+      cascade: true,
+    },
+  )
+  receiveMessages: MessageEntity[];
+
+  @OneToMany(() => MessageEntity, (message: MessageEntity) => message.sender, {
+    cascade: true,
+  })
+  sendMessages: MessageEntity[];
 }
