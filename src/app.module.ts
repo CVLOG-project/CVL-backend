@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CommentsModule } from './comments/comments.module';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
     UsersModule,
     AuthModule,
     CommentsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [
