@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { SendMessagesResponse } from 'aws-sdk/clients/pinpoint';
 import { MessagesRepository } from './messages.repository';
+import { MessageRequestDto } from './messages.request.dto';
 
 @Injectable()
 export class MessagesService {
   constructor(private readonly messagesRepository: MessagesRepository) {}
 
-  async createMessage() {
-    return await this.messagesRepository.insertMessage();
+  async createMessage(body: MessageRequestDto) {
+    return await this.messagesRepository.createMessage(body);
   }
 }

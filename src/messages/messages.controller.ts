@@ -1,10 +1,16 @@
-import { Controller, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 import { SuccessInterceptor } from 'src/common/interceptors/success.interceptor';
 import { MessagesService } from './messages.service';
 import { ApiOperation } from '@nestjs/swagger';
-import { GetQuery } from 'src/common/decorators/getquery.decorator';
+import { MessageRequestDto, MessageResponseDto } from './messages.request.dto';
 
 @SkipThrottle()
 @Controller('messages')
@@ -15,8 +21,7 @@ export class MessagesController {
 
   @ApiOperation({ summary: '메시지 DB insert' })
   @Post()
-  async createMessage(@GetQuery() query: any) {
-    console.log(query);
-    return await this.messagesService.createMessage();
+  async createMessage(@Body() body: MessageRequestDto) {
+    return await this.messagesService.createMessage(body);
   }
 }
