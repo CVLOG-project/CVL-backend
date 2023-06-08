@@ -28,6 +28,8 @@ export class JwtAuthGuard implements CanActivate {
         ? req.headers.authorization.split(' ')[1]
         : null;
 
+    console.log(req);
+
     if (accessToken === null) {
       throw new UnauthorizedException('accessToken is null');
     }

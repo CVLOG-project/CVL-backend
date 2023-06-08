@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { MessageEntity } from 'src/entities/message.entity';
 import { DataSource, Repository } from 'typeorm';
-import { MessageRequestDto } from './messages.request.dto';
-import * as moment from 'moment';
+import { MessageInsertDto, MessageRequestDto } from './messages.request.dto';
+import moment from 'moment';
 
 @Injectable()
 export class MessagesRepository {
@@ -14,7 +14,7 @@ export class MessagesRepository {
     private readonly datasource: DataSource,
   ) {}
 
-  async createMessage(body: MessageRequestDto) {
+  async createMessage(body: MessageInsertDto) {
     const { receiver_id, sender_id, content } = body;
 
     const message = this.messagesRepository.create({
@@ -28,5 +28,9 @@ export class MessagesRepository {
     const result = await this.messagesRepository.save(message);
 
     return result;
+  }
+
+  async getMessages(query: MessageRequestDto) {
+    return query;
   }
 }

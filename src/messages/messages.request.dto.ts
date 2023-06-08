@@ -1,6 +1,16 @@
-import { IsBoolean, IsDate, IsNumber, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsDate,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsInt,
+  Min,
+  Matches,
+} from 'class-validator';
 
-export class MessageRequestDto {
+export class MessageInsertDto {
   @IsNumber()
   receiver_id: number;
 
@@ -9,6 +19,20 @@ export class MessageRequestDto {
 
   @IsString()
   content: string;
+}
+
+export class MessageRequestDto {
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : parseInt(value)))
+  @IsNumber()
+  @Min(1)
+  receiver_id: number;
+
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : parseInt(value)))
+  @IsNumber()
+  @Min(1)
+  sender_id: number;
 }
 
 export class MessageReceiverDeleteDto {
